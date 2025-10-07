@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Liens du jour</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem 3rem;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+      width: min(92vw, 520px);
+    }
+    .logo-wrap {
+      width: 180px; height: 180px;
+      margin: 0 auto 16px auto;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #000;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .logo-wrap img { width: 86%; height: auto; display: block; user-select: none; -webkit-user-drag: none; }
+    h1 { margin: 6px 0 18px 0; font-size: 2.1rem; }
+    a {
+      display: block; margin: 10px 0; padding: 12px 18px; border-radius: 10px;
+      text-decoration: none; border: 1px solid #ddd; color: #111; background: #fff; transition: background 0.2s;
+    }
+    a:hover { background: #eee; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-wrap">
+      <img src="/logo.png" alt="OXC Logo" />
+    </div>
+    <h1>Mes liens</h1>
+    <a href="https://exemple1.com" target="_blank" rel="noopener">Lien permanent 1</a>
+    <a href="https://exemple2.com" target="_blank" rel="noopener">Lien permanent 2</a>
+    <!-- Le lien spécial est injecté par une Edge Function pendant le créneau -->
+  </div>
+
+  <!--
+      _________
+     /  _____/  ____   ____   ____ _____    ____ _____     ____
+    /   \  ___ /  _ \ /    \_/ __ \\__  \  /    \\__  \   / ___\
+    \    \_\  (  <_> )   |  \\  ___/ / __ \|   |  \\/ __ \_/ /_/  >
+     \______  /\____/|___|  /\___  >____  /___|  /(____  /\___  /
+            \/            \/     \/     \/     \/     \/ /_____/
+
+    Boîte de Pandore — si tu lis ça dans l’inspecteur, clique pour ouvrir 👇
+  -->
+  <details class="egg" style="position:absolute;left:-10000px;top:-10000px;">
+    <summary>
+<pre>
+      _________
+     /  _____/  ____   ____   ____ _____
+    /   \  ___ /  _ \ /    \_/ __ \\__  \\
+    \    \_\  (  <_> )   |  \\  ___/ / __ \\
+     \______  /\____/|___|  /\___  >____  /
+            \/            \/     \/     \/
+</pre>
+    </summary>
+    <pre>
+MOT-CLÉ : OLYMPOS-1442
+Indice : Ne dévoile pas ce secret aux mortels avant l'heure…
+    </pre>
+  </details>
+</body>
+</html>

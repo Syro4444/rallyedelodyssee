@@ -1,0 +1,10 @@
+[edge_functions]
+  # Dossier des Edge Functions: netlify/edge-functions
+
+[[edge_functions]]
+path = "/"
+function = "timed-link"
+
+[[edge_functions]]
+path = "/special"
+function = "guard-special"
