@@ -1,7 +1,0 @@
-[[edge_functions]]
-path = "/"
-function = "timed-link"
-
-[[edge_functions]]
-path = "/special"
-function = "guard-special"
