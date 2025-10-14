@@ -30,6 +30,30 @@
       padding: 0;
       overflow-x: hidden;
     }
+    
+    /* Rotation du fond sur les écrans PC pour améliorer la qualité */
+    @media (min-width: 768px) {
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-image: url('./fond.png');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        transform: rotate(90deg);
+        transform-origin: center;
+        z-index: -1;
+      }
+      
+      body {
+        background-image: none;
+      }
+    }
     .container {
       background: transparent;
       padding: 2rem 3rem;
@@ -48,12 +72,16 @@
       margin: 6px 0 24px 0; 
       font-size: 2.8rem; 
       font-family: 'Dalek', system-ui, sans-serif;
-      color: #8B4513;
+      color: #5D2F0A;
+      text-transform: uppercase;
+      letter-spacing: 3px;
       text-shadow: 
-        -1px -1px 0 #000,
-        1px -1px 0 #000,
-        -1px 1px 0 #000,
-        1px 1px 0 #000;
+        2px 2px 0 #8B5A2B,
+        4px 4px 0 #6B3E1A,
+        6px 6px 8px rgba(0, 0, 0, 0.3);
+      filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5));
+      font-weight: bold;
+      text-rendering: optimizeLegibility;
     }
     a {
       display: block; 
