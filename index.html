@@ -36,10 +36,10 @@
       body::before {
         content: '';
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
+        top: -50%;
+        left: -50%;
+        width: 200vw;
+        height: 200vh;
         background-image: url('./fond.png');
         background-size: cover;
         background-position: center center;
@@ -48,14 +48,11 @@
         transform: rotate(90deg);
         transform-origin: center;
         z-index: -1;
-        min-width: 100vw;
-        min-height: 100vh;
       }
       
       body {
         background-image: none;
-        min-width: 100vw;
-        min-height: 100vh;
+        overflow: hidden;
       }
     }
     .container {
@@ -76,7 +73,7 @@
       margin: 6px 0 24px 0; 
       font-size: 2.8rem; 
       font-family: 'Dalek', system-ui, sans-serif;
-      color: #8B4513;
+      color: #5D2F0A;
       text-transform: uppercase;
       letter-spacing: 4px;
       text-shadow: 
@@ -84,10 +81,10 @@
         -1px -1px 0 #D2B48C,
         1px 1px 0 #654321,
         2px 2px 0 #654321,
-        3px 3px 0 #3E2723,
-        4px 4px 0 #3E2723,
-        5px 5px 8px rgba(0, 0, 0, 0.4);
-      filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.6));
+        3px 3px 0 #2E1A0F,
+        4px 4px 0 #2E1A0F,
+        5px 5px 8px rgba(0, 0, 0, 0.6);
+      filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
       font-weight: bold;
       text-rendering: optimizeLegibility;
     }
