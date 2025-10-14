@@ -31,28 +31,14 @@
       overflow-x: hidden;
     }
     
-    /* Rotation du fond sur les écrans PC pour améliorer la qualité */
+    /* Fond rotatif sur PC pour améliorer la qualité */
     @media (min-width: 768px) {
-      body::before {
-        content: '';
-        position: fixed;
-        top: -50%;
-        left: -50%;
-        width: 200vw;
-        height: 200vh;
-        background-image: url('./fond.png');
+      body {
+        background-image: url('./fond-rotated.png');
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;
         background-attachment: fixed;
-        transform: rotate(90deg);
-        transform-origin: center;
-        z-index: -1;
-      }
-      
-      body {
-        background-image: none;
-        overflow: hidden;
       }
     }
     .container {
@@ -76,17 +62,22 @@
       color: #5D2F0A;
       text-transform: uppercase;
       letter-spacing: 4px;
+      line-height: 1.2;
       text-shadow: 
-        -2px -2px 0 #D2B48C,
         -1px -1px 0 #D2B48C,
         1px 1px 0 #654321,
-        2px 2px 0 #654321,
-        3px 3px 0 #2E1A0F,
-        4px 4px 0 #2E1A0F,
-        5px 5px 8px rgba(0, 0, 0, 0.6);
-      filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
+        2px 2px 0 #3E2723,
+        3px 3px 4px rgba(0, 0, 0, 0.3);
+      filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4));
       font-weight: bold;
       text-rendering: optimizeLegibility;
+    }
+    
+    @media (max-width: 767px) {
+      h1 {
+        line-height: 1.4;
+        margin: 6px 0 30px 0;
+      }
     }
     a {
       display: block; 
