@@ -1,4 +1,5 @@
 {
+  "enableSecretLink": false,
   "timeWindowParis": {
     "start": { "hour": 4, "minute": 0 },
     "end": { "hour": 4, "minute": 5 }

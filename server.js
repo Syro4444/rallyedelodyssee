@@ -19,18 +19,25 @@ function loadConfigOrDefault() {
     const parsed = JSON.parse(raw);
     const start = parsed?.timeWindowParis?.start;
     const end = parsed?.timeWindowParis?.end;
+    const enableSecretLink = parsed?.enableSecretLink !== false; // default to true if not specified
     if (
       start && end &&
       Number.isInteger(start.hour) && Number.isInteger(start.minute) &&
       Number.isInteger(end.hour) && Number.isInteger(end.minute)
     ) {
-      return { startHour: start.hour, startMinute: start.minute, endHour: end.hour, endMinute: end.minute };
+      return { 
+        startHour: start.hour, 
+        startMinute: start.minute, 
+        endHour: end.hour, 
+        endMinute: end.minute,
+        enableSecretLink: enableSecretLink
+      };
     }
   } catch (e) {
     // fall back below
   }
-  // Default to 14:42–14:45 Europe/Paris
-  return { startHour: 14, startMinute: 42, endHour: 14, endMinute: 45 };
+  // Default to 14:42–14:45 Europe/Paris with secret link enabled
+  return { startHour: 14, startMinute: 42, endHour: 14, endMinute: 45, enableSecretLink: true };
 }
 
 const timeWindow = loadConfigOrDefault();
@@ -59,11 +66,11 @@ app.get(['/', '/index.html'], (req, res) => {
   const indexPath = path.join(__dirname, 'index.html');
   let html = fs.readFileSync(indexPath, 'utf8');
 
-  if (isOpenParisWindow(timeWindow.startHour, timeWindow.startMinute, timeWindow.endHour, timeWindow.endMinute)) {
+  if (timeWindow.enableSecretLink && isOpenParisWindow(timeWindow.startHour, timeWindow.startMinute, timeWindow.endHour, timeWindow.endMinute)) {
     // append the link inside the .container div
     html = html.replace(
       /(<div class=\"container\"[\s\S]*?>)/,
-      `$1\n    <a href=\"/special\" class=\"special\" style=\"display:block;margin:10px 0;padding:12px 18px;border-radius:10px;text-decoration:none;border:1px solid gold;background:gold;color:#111;font-weight:600\">✨ Lien spécial</a>`
+      `$1\n    <div class=\"special\" style=\"display:block;margin:10px 0;padding:12px 18px;border-radius:10px;border:1px solid gold;background:gold;color:#111;font-weight:600;cursor:pointer;position:relative\" onmouseover=\"this.querySelector('.hidden-text').style.display='block'\" onmouseout=\"this.querySelector('.hidden-text').style.display='none'\" ontouchstart=\"this.querySelector('.hidden-text').style.display='block'\" ontouchend=\"this.querySelector('.hidden-text').style.display='none'\">✨ Nyx vous salue, voyageurs de la nuit<div class=\"hidden-text\" style=\"display:none;margin-top:8px;font-size:18px;color:#8B4513;font-style:italic\">Ἀστερία</div></div>`
     );
   }
 
