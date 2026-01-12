@@ -145,6 +145,324 @@
     }
   </style>
 </head>
+<script>
+  (async function () {
+    // 1) Load config.json (same folder)
+    let cfg;
+    try {
+      const r = await fetch('./config.json', { cache: 'no-store' });
+      cfg = await r.json();
+    } catch (e) {
+      console.warn('Cannot load config.json', e);
+      return;
+    }
+  
+    if (cfg.enableSecretLink === false) return;
+  
+    // 2) Compute "now" in Europe/Paris
+    function getParisHM() {
+      try {
+        const fmt = new Intl.DateTimeFormat('fr-FR', {
+          timeZone: 'Europe/Paris',
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const parts = fmt.formatToParts(new Date());
+        const h = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
+        const m = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
+        return { h, m, ok: true };
+      } catch (e) {
+        const d = new Date();
+        return { h: d.getHours(), m: d.getMinutes(), ok: false };
+      }
+    }
+  
+    function parisISODate() {
+      try {
+        const fmt = new Intl.DateTimeFormat('fr-FR', {
+          timeZone: 'Europe/Paris',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+        const parts = fmt.formatToParts(new Date());
+        const get = (t) => parts.find(p => p.type === t)?.value;
+        return get('year') + '-' + get('month') + '-' + get('day');
+      } catch (e) {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      }
+    }
+  
+    const start = cfg.timeWindowParis?.start;
+    const end = cfg.timeWindowParis?.end;
+    if (!start || !end) return;
+  
+    const now = getParisHM();
+    const cur = now.h * 60 + now.m;
+    const s = start.hour * 60 + start.minute;
+    const e = end.hour * 60 + end.minute;
+  
+    const open = cur >= s && cur < e;
+    if (!open) return;
+  
+    // 3) One click per day per user (browser)
+    const KEY = 'nyx_eye_used_' + parisISODate();
+    try {
+      if (localStorage.getItem(KEY) === '1') return;
+    } catch (e) {}
+  
+    // 4) Message config (optional)
+    const lines = (cfg.nyx?.lines && Array.isArray(cfg.nyx.lines)) ? cfg.nyx.lines.slice(0, 10) : [
+      "Nyx vous félicite, voyageurs, pour la ténacité dont vous faites preuve.",
+      "Chaque indice arraché à l’ombre est une victoire sur le doute.",
+      "Vous avez suivi les traces, recollé les fragments, et tenu bon.",
+      "Votre curiosité éclaire la route quand la nuit se fait plus dense.",
+      "Vous avez su écouter les silences autant que les signes.",
+      "Les obstacles n’ont fait que renforcer votre cohésion.",
+      "Continuez : l’Odyssée récompense les esprits patients.",
+      "Que votre courage reste vif, même lorsque tout semble se taire.",
+      "La déesse vous observe… et sourit à vos efforts.",
+      "Avancez, et laissez derrière vous les cendres de l’hésitation."
+    ];
+    const solution = (typeof cfg.nyx?.solution === 'string') ? cfg.nyx.solution : "Ἀστερία";
+  
+    // 5) Inject button + overlay in .container
+    const container = document.querySelector('.container');
+    if (!container) return;
+  
+    const eye = document.createElement('button');
+    eye.id = 'nyx-eye';
+    eye.type = 'button';
+    eye.setAttribute('aria-label', 'Lire le message de Nyx');
+    eye.innerHTML = '<span aria-hidden="true">👁️</span>';
+  
+    const overlay = document.createElement('div');
+    overlay.id = 'nyx-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML = `
+      <div id="nyx-parchment" role="dialog" aria-modal="true" aria-label="Message de Nyx">
+        <div id="nyx-content"></div>
+      </div>
+    `;
+  
+    container.appendChild(eye);
+    document.body.appendChild(overlay);
+  
+    // 6) Styles
+    const style = document.createElement('style');
+    style.textContent = `
+      #nyx-eye{
+        margin-top:14px;
+        border: 2px solid rgba(93,47,10,.55);
+        background: rgba(255,255,255,.78);
+        border-radius: 16px;
+        padding: 14px 18px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        line-height: 1;
+        box-shadow: 0 10px 18px rgba(0,0,0,.16);
+        transition: transform .18s ease, box-shadow .18s ease, background .25s ease;
+      }
+      #nyx-eye:hover{ transform: translateY(-2px); box-shadow: 0 14px 24px rgba(0,0,0,.18); background: rgba(255,255,255,.9); }
+      #nyx-eye:active{ transform: translateY(0px); }
+  
+      #nyx-overlay{
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(ellipse at center, rgba(0,0,0,.58), rgba(0,0,0,.86));
+        z-index: 9999;
+        padding: 24px;
+      }
+      #nyx-overlay.show{ display:flex; animation: nyxFadeIn .35s ease-out both; }
+      @keyframes nyxFadeIn{ from{ opacity:0 } to{ opacity:1 } }
+  
+      #nyx-parchment{
+        width: min(920px, 92vw);
+        max-height: min(88vh, 720px);
+        overflow: hidden;
+        position: relative;
+        border-radius: 24px;
+        box-shadow: 0 30px 80px rgba(0,0,0,.45);
+        transform: translateY(10px) scale(.98);
+        opacity: 0;
+        animation: nyxUnfurl .75s cubic-bezier(.2,.9,.2,1) both;
+        background:
+          radial-gradient(1200px 500px at 20% 10%, rgba(255,255,255,.45), transparent 60%),
+          radial-gradient(900px 420px at 80% 20%, rgba(255,255,255,.24), transparent 55%),
+          linear-gradient(180deg, rgba(248,238,212,1), rgba(236,221,189,1));
+        border: 1px solid rgba(93,47,10,.35);
+      }
+      #nyx-parchment:before{
+        content:"";
+        position:absolute; inset:0;
+        background:
+          radial-gradient(circle at 20% 30%, rgba(93,47,10,.08), transparent 50%),
+          radial-gradient(circle at 80% 60%, rgba(93,47,10,.06), transparent 55%),
+          repeating-linear-gradient(0deg, rgba(93,47,10,.035) 0, rgba(93,47,10,.035) 1px, transparent 2px, transparent 6px);
+        mix-blend-mode: multiply;
+        pointer-events:none;
+        opacity:.85;
+      }
+      #nyx-parchment:after{
+        content:"";
+        position:absolute; inset:-2px;
+        border-radius: 26px;
+        box-shadow: inset 0 0 0 2px rgba(93,47,10,.14), inset 0 0 40px rgba(0,0,0,.10);
+        pointer-events:none;
+      }
+      @keyframes nyxUnfurl{
+        0%{ opacity:0; transform: translateY(18px) scale(.965); filter: blur(2px); clip-path: inset(0 50% 0 50% round 24px); }
+        55%{ opacity:1; transform: translateY(0px) scale(1); filter: blur(0px); clip-path: inset(0 0 0 0 round 24px); }
+        100%{ opacity:1; transform: translateY(0px) scale(1); filter: blur(0px); }
+      }
+  
+      #nyx-content{
+        position: relative;
+        padding: 44px 42px;
+        font-family: 'GaramondAntique', serif;
+        color: #3b1f0a;
+        font-size: 22px;
+        line-height: 1.55;
+        text-align: left;
+        user-select: none;
+      }
+      @media (max-width: 767px){
+        #nyx-content{ padding: 30px 24px; font-size: 18px; }
+      }
+      .nyx-line{ margin: 0 0 10px 0; }
+      .nyx-word{ display:inline-block; will-change: transform, opacity, filter; }
+      .nyx-word.vanish{ animation: nyxWordVanish .55s ease-out forwards; }
+      @keyframes nyxWordVanish{
+        0%{ opacity:1; transform: translateY(0) rotate(0deg); filter: blur(0px); }
+        55%{ opacity:.35; transform: translateY(-2px) rotate(-1deg); filter: blur(.6px); }
+        100%{ opacity:0; transform: translateY(10px) rotate(2deg); filter: blur(2px); }
+      }
+  
+      #nyx-parchment.burn{ animation: nyxBurnClip 1.35s ease-in forwards; }
+      @keyframes nyxBurnClip{
+        0%{ clip-path: inset(0 0 0 0 round 24px); filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+        35%{ filter: drop-shadow(0 0 18px rgba(255,120,0,.25)) drop-shadow(0 0 40px rgba(255,60,0,.12)); }
+        100%{ clip-path: inset(0 0 100% 0 round 24px); filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+      }
+      #nyx-parchment .flameband{
+        position:absolute; left:-10%; width:120%; height: 34%;
+        bottom: -34%;
+        background:
+          radial-gradient(closest-side at 10% 70%, rgba(255,210,120,.9), transparent 70%),
+          radial-gradient(closest-side at 30% 80%, rgba(255,140,40,.8), transparent 75%),
+          radial-gradient(closest-side at 55% 70%, rgba(255,110,20,.7), transparent 75%),
+          radial-gradient(closest-side at 80% 85%, rgba(255,220,140,.8), transparent 75%),
+          radial-gradient(closest-side at 95% 65%, rgba(255,120,30,.65), transparent 75%),
+          linear-gradient(180deg, rgba(255,120,0,.0), rgba(255,90,0,.35), rgba(120,30,0,.18));
+        filter: blur(1px) saturate(1.15);
+        opacity: 0;
+        pointer-events:none;
+        mix-blend-mode: screen;
+      }
+      #nyx-parchment.burn .flameband{ opacity:1; animation: flameUp 1.35s ease-in forwards; }
+      @keyframes flameUp{ 0%{ transform: translateY(0); } 100%{ transform: translateY(-285%); } }
+    `;
+    document.head.appendChild(style);
+  
+    // 7) Build message with words as spans, and bold solution at the end
+    function tokenizeIntoSpans(htmlLine) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = htmlLine;
+  
+      function wrapTextNode(node) {
+        const parts = node.nodeValue.split(/(\s+)/);
+        const frag = document.createDocumentFragment();
+        for (const part of parts) {
+          if (part.trim() === '') frag.appendChild(document.createTextNode(part));
+          else {
+            const sp = document.createElement('span');
+            sp.className = 'nyx-word';
+            sp.textContent = part;
+            frag.appendChild(sp);
+          }
+        }
+        node.replaceWith(frag);
+      }
+  
+      const walker = document.createTreeWalker(tmp, NodeFilter.SHOW_TEXT, null);
+      const textNodes = [];
+      while (walker.nextNode()) textNodes.push(walker.currentNode);
+      for (const tn of textNodes) wrapTextNode(tn);
+  
+      return tmp.innerHTML;
+    }
+  
+    function buildMessage() {
+      const c = overlay.querySelector('#nyx-content');
+      c.innerHTML = '';
+      const l = lines.slice(0, 10);
+      l[l.length - 1] = l[l.length - 1] + ' <strong>' + solution.replace(/</g,'&lt;') + '</strong>';
+      for (const ln of l) {
+        const p = document.createElement('div');
+        p.className = 'nyx-line';
+        p.innerHTML = tokenizeIntoSpans(ln);
+        c.appendChild(p);
+      }
+    }
+  
+    function shuffle(a) {
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+  
+    function vanishWordsThenBurn() {
+      const c = overlay.querySelector('#nyx-content');
+      const parchment = overlay.querySelector('#nyx-parchment');
+      const words = Array.from(c.querySelectorAll('.nyx-word'));
+      shuffle(words);
+  
+      const base = 18;
+      words.forEach((w, i) => {
+        const jitter = Math.floor(Math.random() * 40);
+        setTimeout(() => w.classList.add('vanish'), i * base + jitter);
+      });
+  
+      const vanishTotal = words.length * base + 500;
+  
+      setTimeout(() => {
+        if (!parchment.querySelector('.flameband')) {
+          const flame = document.createElement('div');
+          flame.className = 'flameband';
+          parchment.appendChild(flame);
+        }
+        parchment.classList.add('burn');
+      }, vanishTotal + 120);
+  
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        overlay.style.display = 'none';
+      }, vanishTotal + 1700);
+    }
+  
+    // 8) Click behavior: 1 second visible then vanish+burn
+    eye.addEventListener('click', () => {
+      try { localStorage.setItem(KEY, '1'); } catch (e) {}
+      eye.style.display = 'none';
+  
+      buildMessage();
+      overlay.classList.add('show');
+  
+      setTimeout(() => vanishWordsThenBurn(), 1000);
+    });
+  
+  })();
+  </script>  
 <body>
   <div class="container">
     <div class="logo-wrap">
