@@ -1,7 +1,7 @@
 {
   "enableSecretLink": true,
   "timeWindowParis": {
-    "start": { "hour": 10, "minute": 23 },
-    "end": { "hour": 22, "minute": 17}
+    "start": { "hour": 16, "minute": 30 },
+    "end": { "hour": 22, "minute": 0 }
   }
 }

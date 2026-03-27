@@ -1,0 +1,13 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/nyx-status"
+  to = "/.netlify/functions/nyx-status"
+  status = 200
+
+[[redirects]]
+  from = "/api/nyx-claim"
+  to = "/.netlify/functions/nyx-claim"
+  status = 200
