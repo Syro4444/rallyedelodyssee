@@ -137,15 +137,20 @@
         margin:0 0 9px 0;
         will-change:transform, opacity, filter;
       }
+      .nyx-word{
+        display:inline-block;
+        white-space:pre;
+        will-change:transform, opacity, filter;
+      }
       .nyx-solution{
         margin-top:14px;
         text-align:center;
         font-weight:700;
       }
-      .nyx-line.vanish{
-        animation:nyxLineVanish .55s ease-out forwards;
+      .nyx-word.vanish{
+        animation:nyxWordVanish .55s ease-out forwards;
       }
-      @keyframes nyxLineVanish{
+      @keyframes nyxWordVanish{
         0%{ opacity:1; transform:translateY(0) rotate(0deg); filter:blur(0); }
         55%{ opacity:.35; transform:translateY(-2px) rotate(-1deg); filter:blur(.6px); }
         100%{ opacity:0; transform:translateY(10px) rotate(2deg); filter:blur(2px); }
@@ -200,31 +205,37 @@
     return { eye, overlay, parchment: overlay.querySelector('#nyx-parchment'), content: overlay.querySelector('#nyx-content') };
   }
 
-  function showStatus(container, message) {
-    let status = document.getElementById('nyx-status');
-    if (!status) {
-      status = document.createElement('div');
-      status.id = 'nyx-status';
-      status.className = 'nyx-status';
-      container.appendChild(status);
-    }
-    status.textContent = message;
-  }
-
   function buildMessage(lines, solution) {
     const wrapper = document.createElement('div');
     lines.forEach((line) => {
       const item = document.createElement('div');
       item.className = 'nyx-line';
-      item.textContent = line;
+      appendAnimatedWords(item, line);
       wrapper.appendChild(item);
     });
 
     const solutionLine = document.createElement('div');
     solutionLine.className = 'nyx-line nyx-solution';
-    solutionLine.innerHTML = `<strong>${escapeHtml(solution)}</strong>`;
+    const strong = document.createElement('strong');
+    appendAnimatedWords(strong, solution);
+    solutionLine.appendChild(strong);
     wrapper.appendChild(solutionLine);
     return wrapper;
+  }
+
+  function appendAnimatedWords(container, text) {
+    const parts = String(text).split(/(\s+)/);
+    parts.forEach((part) => {
+      if (!part) return;
+      if (/^\s+$/.test(part)) {
+        container.appendChild(document.createTextNode(part));
+        return;
+      }
+      const word = document.createElement('span');
+      word.className = 'nyx-word';
+      word.textContent = part;
+      container.appendChild(word);
+    });
   }
 
   function shuffle(items) {
@@ -235,15 +246,15 @@
     return items;
   }
 
-  function vanishLinesThenBurn(parchment, content, overlay) {
-    const lines = shuffle(Array.from(content.querySelectorAll('.nyx-line')));
-    const base = 120;
-    lines.forEach((line, index) => {
+  function vanishWordsThenBurn(parchment, content, overlay) {
+    const words = shuffle(Array.from(content.querySelectorAll('.nyx-word')));
+    const base = 28;
+    words.forEach((word, index) => {
       const jitter = Math.floor(Math.random() * 40);
-      setTimeout(() => line.classList.add('vanish'), index * base + jitter);
+      setTimeout(() => word.classList.add('vanish'), index * base + jitter);
     });
 
-    const vanishTotal = lines.length * base + 500;
+    const vanishTotal = words.length * base + 500;
     setTimeout(() => {
       if (!parchment.querySelector('.flameband')) {
         const flame = document.createElement('div');
@@ -275,15 +286,9 @@
       return;
     }
 
+    if (status.usedToday) return;
+    if (!status.windowOpen) return;
     if (!status.showEye) return;
-    if (status.usedToday) {
-      showStatus(container, 'Le message de Nyx a deja ete consulte aujourd hui depuis ce reseau.');
-      return;
-    }
-    if (!status.windowOpen) {
-      showStatus(container, 'Le message de Nyx n est pas disponible pour le moment.');
-      return;
-    }
 
     const ui = injectNyxUi(container);
     if (!ui) return;
@@ -302,20 +307,12 @@
         });
 
         if (!response.ok) {
-          if (response.status === 409) {
-            showStatus(container, 'Le message de Nyx a deja ete consulte aujourd hui depuis ce reseau.');
-          } else if (response.status === 403) {
-            showStatus(container, 'Le message de Nyx n est plus disponible pour le moment.');
-          } else {
-            showStatus(container, 'Impossible de recuperer le message de Nyx pour l instant.');
-          }
           ui.eye.remove();
           return;
         }
 
         payload = await response.json();
       } catch {
-        showStatus(container, 'Impossible de recuperer le message de Nyx pour l instant.');
         ui.eye.disabled = false;
         ui.eye.style.pointerEvents = '';
         ui.eye.style.opacity = '';
@@ -337,7 +334,7 @@
       }
 
       document.addEventListener('keydown', onKey);
-      setTimeout(() => vanishLinesThenBurn(ui.parchment, ui.content, ui.overlay), 7000);
+      setTimeout(() => vanishWordsThenBurn(ui.parchment, ui.content, ui.overlay), 7000);
     });
   }
 

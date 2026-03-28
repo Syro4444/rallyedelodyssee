@@ -19,8 +19,6 @@ const port = process.env.PORT || 3000;
 const config = getNyxConfig();
 const claimsPath = path.join(__dirname, 'data', 'nyx-claims.json');
 
-app.use(express.static(__dirname, { index: false }));
-
 function ensureClaimsFile() {
   fs.mkdirSync(path.dirname(claimsPath), { recursive: true });
   if (!fs.existsSync(claimsPath)) {
@@ -46,22 +44,25 @@ function getClientIp(req) {
   return extractClientIp(req.headers, req.socket?.remoteAddress || '');
 }
 
-app.get('/debug-time', (req, res) => {
-  const paris = getParisParts();
-  res.json({
-    paris: {
-      date: `${String(paris.year).padStart(4, '0')}-${String(paris.month).padStart(2, '0')}-${String(paris.day).padStart(2, '0')}`,
-      time: `${String(paris.hour).padStart(2, '0')}:${String(paris.minute).padStart(2, '0')}:${String(paris.second).padStart(2, '0')}`
-    },
-    window: {
-      startHour: config.timeWindowParis.start.hour,
-      startMinute: config.timeWindowParis.start.minute,
-      endHour: config.timeWindowParis.end.hour,
-      endMinute: config.timeWindowParis.end.minute,
-      open: isOpenParisWindow(config)
-    }
-  });
-});
+function canServeSecret(req) {
+  if (!isOpenParisWindow(config)) {
+    return false;
+  }
+  const ip = getClientIp(req);
+  if (!ip) {
+    return false;
+  }
+  const claims = readClaims();
+  const dateKey = parisDateKey();
+  return !claims[claimStorageKey(dateKey, hashIp(ip))];
+}
+
+function sendStaticFile(res, relativePath, contentType) {
+  if (contentType) {
+    res.type(contentType);
+  }
+  res.sendFile(path.join(__dirname, relativePath));
+}
 
 app.get('/api/nyx-status', (req, res) => {
   const windowOpen = isOpenParisWindow(config);
@@ -111,11 +112,33 @@ app.post('/api/nyx-claim', (req, res) => {
   });
 });
 
+app.get('/logo.png', (req, res) => sendStaticFile(res, 'logo.png', 'image/png'));
+app.get('/fond.png', (req, res) => sendStaticFile(res, 'fond.png', 'image/png'));
+app.get('/fond-rotated.png', (req, res) => sendStaticFile(res, 'fond-rotated.png', 'image/png'));
+app.get('/Font/Dalek.ttf', (req, res) => sendStaticFile(res, 'Font/Dalek.ttf', 'font/ttf'));
+app.get('/Font/Gar-A-MondTall-Antique.ttf', (req, res) => sendStaticFile(res, 'Font/Gar-A-MondTall-Antique.ttf', 'font/ttf'));
+
+app.get('/assets/app.js', (req, res) => {
+  if (!canServeSecret(req)) {
+    return res.status(404).send('Not Found');
+  }
+  res.type('application/javascript; charset=utf-8');
+  res.sendFile(path.join(__dirname, 'nyx-client.js'));
+});
+
 app.get(['/', '/index.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  const indexPath = path.join(__dirname, 'index.html');
+  let html = fs.readFileSync(indexPath, 'utf8');
+  if (canServeSecret(req)) {
+    html = html.replace('</body>', '  <script src="/assets/app.js" defer></script>\n</body>');
+  }
+  res.type('text/html; charset=utf-8').send(html);
+});
+
+app.use((req, res) => {
+  res.status(404).send('Not Found');
 });
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
-  console.log(`Debug time: http://localhost:${port}/debug-time`);
 });
