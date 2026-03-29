@@ -133,7 +133,7 @@ app.get('/fond-rotated.png', (req, res) => sendStaticFile(res, 'fond-rotated.png
 app.get('/Font/Dalek.ttf', (req, res) => sendStaticFile(res, 'Font/Dalek.ttf', 'font/ttf'));
 app.get('/Font/Gar-A-MondTall-Antique.ttf', (req, res) => sendStaticFile(res, 'Font/Gar-A-MondTall-Antique.ttf', 'font/ttf'));
 
-app.get('/assets/app.js', (req, res) => {
+app.get('/api/runtime', (req, res) => {
   if (!canServeSecret(req)) {
     return res.status(404).send('Not Found');
   }
@@ -141,13 +141,13 @@ app.get('/assets/app.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'nyx-client.js'));
 });
 
+app.get('/site-loader.js', (req, res) => {
+  res.type('application/javascript; charset=utf-8');
+  res.sendFile(path.join(__dirname, 'site-loader.js'));
+});
+
 app.get(['/', '/index.html'], (req, res) => {
-  const indexPath = path.join(__dirname, 'index.html');
-  let html = fs.readFileSync(indexPath, 'utf8');
-  if (canServeSecret(req)) {
-    html = html.replace('</body>', '  <script src="/assets/app.js" defer></script>\n</body>');
-  }
-  res.type('text/html; charset=utf-8').send(html);
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.use((req, res) => {

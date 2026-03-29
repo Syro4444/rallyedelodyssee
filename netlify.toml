@@ -11,3 +11,13 @@
   from = "/api/nyx-claim"
   to = "/.netlify/functions/nyx-claim"
   status = 200
+
+[[redirects]]
+  from = "/api/time-check"
+  to = "/.netlify/functions/time-check"
+  status = 200
+
+[[redirects]]
+  from = "/api/runtime"
+  to = "/.netlify/functions/runtime"
+  status = 200
