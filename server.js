@@ -82,6 +82,21 @@ app.get('/api/nyx-status', (req, res) => {
   return res.json({ showEye: !usedToday, windowOpen: true, usedToday });
 });
 
+app.get('/api/time-check', (req, res) => {
+  const paris = getParisParts();
+  res.json({
+    parisDate: `${String(paris.year).padStart(4, '0')}-${String(paris.month).padStart(2, '0')}-${String(paris.day).padStart(2, '0')}`,
+    parisTime: `${String(paris.hour).padStart(2, '0')}:${String(paris.minute).padStart(2, '0')}:${String(paris.second).padStart(2, '0')}`,
+    window: {
+      startHour: config.timeWindowParis.start.hour,
+      startMinute: config.timeWindowParis.start.minute,
+      endHour: config.timeWindowParis.end.hour,
+      endMinute: config.timeWindowParis.end.minute,
+      open: isOpenParisWindow(config)
+    }
+  });
+});
+
 app.post('/api/nyx-claim', (req, res) => {
   if (!isOpenParisWindow(config)) {
     return res.status(403).json({ error: 'Unavailable' });
