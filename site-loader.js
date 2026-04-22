@@ -1,24 +1,64 @@
 (function () {
-  const QUESTIONS = [
-    {
-      prompt: "Sous quel nom Ulysse se présente-t-il au Cyclope Polyphème ?",
-      choices: [
-        { label: "Personne", value: "personne" },
-        { label: "Ulysse", value: "ulysse" },
-        { label: "Télémaque", value: "telemaque" }
-      ],
-      answer: "personne"
-    },
-    {
-      prompt: "Que donne Ulysse au Cyclope avant de l'aveugler ?",
-      choices: [
-        { label: "Du vin", value: "vin" },
-        { label: "De l'eau", value: "eau" },
-        { label: "Du miel", value: "miel" }
-      ],
-      answer: "vin"
-    }
-  ];
+  const QUESTION_SETS = {
+    one: [
+      {
+        prompt: "Sous quel nom Ulysse se présente-t-il au Cyclope Polyphème ?",
+        choices: [
+          { label: "Personne", value: "personne" },
+          { label: "Ulysse", value: "ulysse" },
+          { label: "Télémaque", value: "telemaque" }
+        ],
+        answer: "personne"
+      },
+      {
+        prompt: "Combien de compagnons d'Ulysse entrent avec lui dans la caverne du Cyclope ?",
+        choices: [
+          { label: "Douze", value: "douze" },
+          { label: "Huit", value: "huit" },
+          { label: "Vingt", value: "vingt" }
+        ],
+        answer: "douze"
+      },
+      {
+        prompt: "Quel héros grec affronte le Cyclope Polyphème dans l'Odyssée ?",
+        choices: [
+          { label: "Ulysse", value: "ulysse" },
+          { label: "Achille", value: "achille" },
+          { label: "Hector", value: "hector" }
+        ],
+        answer: "ulysse"
+      }
+    ],
+    two: [
+      {
+        prompt: "Que donne Ulysse au Cyclope avant de l'aveugler ?",
+        choices: [
+          { label: "Du vin", value: "vin" },
+          { label: "De l'eau", value: "eau" },
+          { label: "Du miel", value: "miel" }
+        ],
+        answer: "vin"
+      },
+      {
+        prompt: "Avec quoi Ulysse perce-t-il l'oeil du Cyclope ?",
+        choices: [
+          { label: "Un pieu d'olivier", value: "pieu" },
+          { label: "Une epee de bronze", value: "epee" },
+          { label: "Une lance d'argent", value: "lance" }
+        ],
+        answer: "pieu"
+      },
+      {
+        prompt: "Qui aide Ulysse a s'echapper de la caverne du Cyclope ?",
+        choices: [
+          { label: "Les beliers", value: "beliers" },
+          { label: "Athena", value: "athena" },
+          { label: "Hermes", value: "hermes" }
+        ],
+        answer: "beliers"
+      }
+    ]
+  };
 
   const CAPTCHA_CATEGORIES = [
     {
@@ -116,20 +156,23 @@
   }
 
   function buildMathQuestion() {
-    const left = 1 + Math.floor(Math.random() * 8);
-    const right = 1 + Math.floor(Math.random() * 7);
-    const answer = left + right;
+    const values = [
+      6 + Math.floor(Math.random() * 10),
+      7 + Math.floor(Math.random() * 9),
+      5 + Math.floor(Math.random() * 8)
+    ];
+    const answer = values.reduce((sum, value) => sum + value, 0);
     const wrongAnswers = new Set();
-    while (wrongAnswers.size < 2) {
-      const offset = Math.random() > 0.5 ? 1 : -1;
-      const candidate = answer + offset * (1 + Math.floor(Math.random() * 3));
+    while (wrongAnswers.size < 3) {
+      const offset = (Math.random() > 0.5 ? 1 : -1) * (2 + Math.floor(Math.random() * 6));
+      const candidate = answer + offset;
       if (candidate > 0 && candidate !== answer) {
         wrongAnswers.add(candidate);
       }
     }
 
     return {
-      prompt: `Quelle est la valeur de ${toRoman(left)} + ${toRoman(right)} ?`,
+      prompt: `Quelle est la valeur de ${values.map((value) => toRoman(value)).join(" + ")} ?`,
       choices: shuffle([
         { label: toRoman(answer), value: String(answer) },
         ...Array.from(wrongAnswers).map((value) => ({
@@ -507,6 +550,8 @@
     const failFlash = overlay.querySelector(".captcha-failflash");
     const selectedObjects = new Set();
     let round = buildRound();
+    let questionOne = pickRandom(QUESTION_SETS.one, 1)[0];
+    let questionTwo = pickRandom(QUESTION_SETS.two, 1)[0];
     let mathQuestion = buildMathQuestion();
 
     function setStep(name) {
@@ -588,13 +633,15 @@
 
     overlay.classList.add("show");
     round = buildRound();
+    questionOne = pickRandom(QUESTION_SETS.one, 1)[0];
+    questionTwo = pickRandom(QUESTION_SETS.two, 1)[0];
     mathQuestion = buildMathQuestion();
-    renderQuestion(stepOne, QUESTIONS[0], () => {
+    renderQuestion(stepOne, questionOne, () => {
       flashSuccess(() => {
         setStep("question-2");
       });
     }, failAndClose);
-    renderQuestion(stepTwo, QUESTIONS[1], () => {
+    renderQuestion(stepTwo, questionTwo, () => {
       flashSuccess(() => {
         setStep("question-3");
       });
