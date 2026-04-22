@@ -60,6 +60,59 @@
     ]
   };
 
+  const MATH_QUESTIONS = [
+    {
+      prompt: "Quelle est la valeur de XIV + IX ?",
+      choices: [
+        { label: "XXIII", value: "23" },
+        { label: "XXI", value: "21" },
+        { label: "XXV", value: "25" },
+        { label: "XIX", value: "19" }
+      ],
+      answer: "23"
+    },
+    {
+      prompt: "Quelle est la valeur de XVI + XIII ?",
+      choices: [
+        { label: "XXIX", value: "29" },
+        { label: "XXVII", value: "27" },
+        { label: "XXXI", value: "31" },
+        { label: "XXV", value: "25" }
+      ],
+      answer: "29"
+    },
+    {
+      prompt: "Quelle est la valeur de XXIV + XI ?",
+      choices: [
+        { label: "XXXV", value: "35" },
+        { label: "XXXIII", value: "33" },
+        { label: "XXXVII", value: "37" },
+        { label: "XXIX", value: "29" }
+      ],
+      answer: "35"
+    },
+    {
+      prompt: "Quelle est la valeur de XVIII + IX + IV ?",
+      choices: [
+        { label: "XXXI", value: "31" },
+        { label: "XXIX", value: "29" },
+        { label: "XXXIII", value: "33" },
+        { label: "XXVII", value: "27" }
+      ],
+      answer: "31"
+    },
+    {
+      prompt: "Quelle est la valeur de XXII + VII + VI ?",
+      choices: [
+        { label: "XXXV", value: "35" },
+        { label: "XXXII", value: "32" },
+        { label: "XXXVII", value: "37" },
+        { label: "XXVIII", value: "28" }
+      ],
+      answer: "35"
+    }
+  ];
+
   const CAPTCHA_CATEGORIES = [
     {
       key: "armes",
@@ -156,32 +209,7 @@
   }
 
   function buildMathQuestion() {
-    const values = [
-      6 + Math.floor(Math.random() * 10),
-      7 + Math.floor(Math.random() * 9),
-      5 + Math.floor(Math.random() * 8)
-    ];
-    const answer = values.reduce((sum, value) => sum + value, 0);
-    const wrongAnswers = new Set();
-    while (wrongAnswers.size < 3) {
-      const offset = (Math.random() > 0.5 ? 1 : -1) * (2 + Math.floor(Math.random() * 6));
-      const candidate = answer + offset;
-      if (candidate > 0 && candidate !== answer) {
-        wrongAnswers.add(candidate);
-      }
-    }
-
-    return {
-      prompt: `Quelle est la valeur de ${values.map((value) => toRoman(value)).join(" + ")} ?`,
-      choices: shuffle([
-        { label: toRoman(answer), value: String(answer) },
-        ...Array.from(wrongAnswers).map((value) => ({
-          label: toRoman(value),
-          value: String(value)
-        }))
-      ]),
-      answer: String(answer)
-    };
+    return pickRandom(MATH_QUESTIONS, 1)[0];
   }
 
   function injectCaptchaStyles() {
@@ -483,7 +511,6 @@
           <div class="captcha-grid" data-captcha-grid></div>
           <div class="captcha-actions">
             <button class="captcha-confirm" type="button">Valider</button>
-            <button class="captcha-cancel" type="button">Annuler</button>
           </div>
           <div class="captcha-feedback" data-feedback></div>
         </div>
@@ -543,7 +570,6 @@
     const objectStep = overlay.querySelector('[data-step="objects"]');
     const grid = overlay.querySelector("[data-captcha-grid]");
     const confirmButton = overlay.querySelector(".captcha-confirm");
-    const cancelButton = overlay.querySelector(".captcha-cancel");
     const objectInstruction = overlay.querySelector("[data-object-instruction]");
     const objectFeedback = objectStep.querySelector("[data-feedback]");
     const successFlash = overlay.querySelector(".captcha-successflash");
@@ -661,15 +687,14 @@
         Array.from(round.validIds).every((id) => selectedObjects.has(id));
 
       if (!isValid) {
-        objectFeedback.textContent = "Les immortels ne s'y trompent pas. Vérifie tes choix.";
+        objectFeedback.textContent = "";
+        failAndClose();
         return;
       }
 
       closeCaptcha();
       window.open(link.href, "_blank", "noopener");
     };
-
-    cancelButton.onclick = closeCaptcha;
     overlay.onclick = (event) => {
       if (event.target === overlay) {
         closeCaptcha();
