@@ -132,6 +132,14 @@ app.get('/fond.png', (req, res) => sendStaticFile(res, 'fond.png', 'image/png'))
 app.get('/fond-rotated.png', (req, res) => sendStaticFile(res, 'fond-rotated.png', 'image/png'));
 app.get('/Font/Dalek.ttf', (req, res) => sendStaticFile(res, 'Font/Dalek.ttf', 'font/ttf'));
 app.get('/Font/Gar-A-MondTall-Antique.ttf', (req, res) => sendStaticFile(res, 'Font/Gar-A-MondTall-Antique.ttf', 'font/ttf'));
+app.get('/captcha-assets/:file', (req, res) => {
+  const file = path.basename(req.params.file || '');
+  const assetPath = path.join(__dirname, 'captcha-assets', file);
+  if (!fs.existsSync(assetPath)) {
+    return res.status(404).send('Not Found');
+  }
+  return res.sendFile(assetPath);
+});
 
 app.get('/api/runtime', (req, res) => {
   if (!canServeSecret(req)) {
