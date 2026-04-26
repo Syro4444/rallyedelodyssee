@@ -487,26 +487,7 @@
     overlay.innerHTML = `
       <div class="captcha-card" role="dialog" aria-modal="true" aria-label="Vérification d'accès">
         <p class="captcha-kicker">Prouvez que vous etes un mortel</p>
-        <div class="captcha-step active" data-step="question-1">
-          <h2 class="captcha-title">Question I</h2>
-          <p class="captcha-text" data-question-text></p>
-          <div class="captcha-actions" data-question-choices></div>
-          <div class="captcha-feedback" data-feedback></div>
-        </div>
-        <div class="captcha-step" data-step="question-2">
-          <h2 class="captcha-title">Question II</h2>
-          <p class="captcha-text" data-question-text></p>
-          <div class="captcha-actions" data-question-choices></div>
-          <div class="captcha-feedback" data-feedback></div>
-        </div>
-        <div class="captcha-step" data-step="question-3">
-          <h2 class="captcha-title">Avant-dernière épreuve</h2>
-          <p class="captcha-text" data-question-text></p>
-          <div class="captcha-actions" data-question-choices></div>
-          <div class="captcha-feedback" data-feedback></div>
-        </div>
-        <div class="captcha-step" data-step="objects">
-          <h2 class="captcha-title">Epreuve 4</h2>
+        <div class="captcha-step active" data-step="objects">
           <p class="captcha-text" data-object-instruction></p>
           <div class="captcha-grid" data-captcha-grid></div>
           <div class="captcha-actions">
@@ -564,9 +545,6 @@
   function openLettersCaptcha(link) {
     injectCaptchaStyles();
     const overlay = injectCaptchaMarkup();
-    const stepOne = overlay.querySelector('[data-step="question-1"]');
-    const stepTwo = overlay.querySelector('[data-step="question-2"]');
-    const stepThree = overlay.querySelector('[data-step="question-3"]');
     const objectStep = overlay.querySelector('[data-step="objects"]');
     const grid = overlay.querySelector("[data-captcha-grid]");
     const confirmButton = overlay.querySelector(".captcha-confirm");
@@ -576,12 +554,9 @@
     const failFlash = overlay.querySelector(".captcha-failflash");
     const selectedObjects = new Set();
     let round = buildRound();
-    let questionOne = pickRandom(QUESTION_SETS.one, 1)[0];
-    let questionTwo = pickRandom(QUESTION_SETS.two, 1)[0];
-    let mathQuestion = buildMathQuestion();
 
     function setStep(name) {
-      [stepOne, stepTwo, stepThree, objectStep].forEach((step) => {
+      [objectStep].forEach((step) => {
         step.classList.toggle("active", step.dataset.step === name);
       });
     }
@@ -592,7 +567,7 @@
       failFlash.classList.remove("show");
       selectedObjects.clear();
       objectFeedback.textContent = "";
-      setStep("question-1");
+      setStep("objects");
     }
 
     function flashSuccess(nextStep) {
@@ -645,10 +620,6 @@
             button.classList.remove("selected");
             return;
           }
-          if (selectedObjects.size >= round.validIds.size) {
-            objectFeedback.textContent = `Choisis exactement ${round.validIds.size} images.`;
-            return;
-          }
           selectedObjects.add(item.id);
           button.classList.add("selected");
           objectFeedback.textContent = "";
@@ -659,27 +630,8 @@
 
     overlay.classList.add("show");
     round = buildRound();
-    questionOne = pickRandom(QUESTION_SETS.one, 1)[0];
-    questionTwo = pickRandom(QUESTION_SETS.two, 1)[0];
-    mathQuestion = buildMathQuestion();
-    renderQuestion(stepOne, questionOne, () => {
-      flashSuccess(() => {
-        setStep("question-2");
-      });
-    }, failAndClose);
-    renderQuestion(stepTwo, questionTwo, () => {
-      flashSuccess(() => {
-        setStep("question-3");
-      });
-    }, failAndClose);
-    renderQuestion(stepThree, mathQuestion, () => {
-      flashSuccess(() => {
-        round = buildRound();
-        renderObjectGrid();
-        setStep("objects");
-      });
-    }, failAndClose);
-    setStep("question-1");
+    renderObjectGrid();
+    setStep("objects");
 
     confirmButton.onclick = () => {
       const isValid =
